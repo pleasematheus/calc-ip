@@ -25,3 +25,10 @@
   font-weight: 400;
   font-style: normal;
 }
+
+.familjen-grotesk-700 {
+  font-family: "Familjen Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}

@@ -75,31 +75,46 @@ export default function App() {
 
   return (
     <div className="grid place-items-center min-h-screen p-4">
-      <div className="w-full max-w-xs">
+      <div className="w-1/2 max-w-xs border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2">
+          <label className="text-center text-2xl block text-white text-sm familjen-grotesk-700 font-bold mb-2">
             Endereço IP
           </label>
           <input
             type="text"
             value={ip}
             onChange={(e) => setIp(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
+            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-blue-500 focus:outline-none focus:shadow-outline hover:border-blue-500 transition-colors transition-shadow duration-300"
             placeholder="Endereço IP (exemplo 192.168.0.1)"
+            aria-label="endereco"
           />
         </div>
+        <hr className="mb-2" />
         <div>
-          <p className="text-white">Classe do IP: {result.ipClass || "-"}</p>
-          <p className="text-white">
+          <p className="text-white familjen-grotesk-400">
+            Classe do IP: {result.ipClass || "-"}
+          </p>
+          <p className="text-white familjen-grotesk-400">
             Endereço de rede: {result.networkAddress || "-"}
           </p>
-          <p className="text-white">
+          <p className="text-white familjen-grotesk-400">
             Endereço Broadcast: {result.broadcastAddress || "-"}
           </p>
-          <p className="text-white">Primeiro Host: {result.firstHost || "-"}</p>
-          <p className="text-white">Último Host: {result.lastHost || "-"}</p>
+          <p className="text-white familjen-grotesk-400">
+            Primeiro Host: {result.firstHost || "-"}
+          </p>
+          <p className="text-white familjen-grotesk-400">
+            Último Host: {result.lastHost || "-"}
+          </p>
         </div>
       </div>
     </div>
   )
+
+
+
+
+
+
+
 }
