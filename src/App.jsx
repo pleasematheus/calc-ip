@@ -19,6 +19,7 @@ export default function App() {
     const networkAddress = ipParts
       .map((part, index) => part & subnetParts[index])
       .join(".")
+
     const broadcastAddress = ipParts
       .map(
         (part, index) =>
@@ -30,6 +31,7 @@ export default function App() {
       .split(".")
       .map((part, index) => (index === 3 ? Number(part) + 1 : part))
       .join(".")
+
     const lastHost = broadcastAddress
       .split(".")
       .map((part, index) => (index === 3 ? Number(part) - 1 : part))
@@ -43,6 +45,7 @@ export default function App() {
       firstHost,
       lastHost,
       ipClass,
+      subnetMask: subnet,
     })
   }
 
@@ -75,46 +78,64 @@ export default function App() {
 
   return (
     <div className="grid place-items-center min-h-screen p-4">
-      <div className="w-1/2 max-w-xs border-solid border-2 border-sky-500 p-3 rounded-xl">
+      <div className="w-full sm:w-1/2 max-w-xs border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
-          <label className="text-center text-2xl block text-white text-sm familjen-grotesk-700 font-bold mb-2">
+          <label className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
             Endereço IP
           </label>
           <input
             type="text"
             value={ip}
             onChange={(e) => setIp(e.target.value)}
-            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-blue-500 focus:outline-none focus:shadow-outline hover:border-blue-500 transition-colors transition-shadow duration-300"
+            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-blue-500 focus:outline-none focus:shadow-outline hover:border-blue-500 transition-all duration-300"
             placeholder="Endereço IP (exemplo 192.168.0.1)"
             aria-label="endereco"
           />
         </div>
         <hr className="mb-2" />
         <div>
-          <p className="text-white familjen-grotesk-400">
-            Classe do IP: {result.ipClass || "-"}
-          </p>
-          <p className="text-white familjen-grotesk-400">
-            Endereço de rede: {result.networkAddress || "-"}
-          </p>
-          <p className="text-white familjen-grotesk-400">
-            Endereço Broadcast: {result.broadcastAddress || "-"}
-          </p>
-          <p className="text-white familjen-grotesk-400">
-            Primeiro Host: {result.firstHost || "-"}
-          </p>
-          <p className="text-white familjen-grotesk-400">
-            Último Host: {result.lastHost || "-"}
-          </p>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">Classe do IP:</p>
+            <p className="text-white familjen-grotesk-400">
+              {result.ipClass || "-"}
+            </p>
+          </div>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">
+              Máscara de sub-rede:
+            </p>
+            <p className="text-white familjen-grotesk-400">
+              {result.subnetMask || "-"}
+            </p>
+          </div>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">Endereço de rede:</p>
+            <p className="text-white familjen-grotesk-400">
+              {result.networkAddress || "-"}
+            </p>
+          </div>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">
+              Endereço Broadcast:
+            </p>
+            <p className="text-white familjen-grotesk-400">
+              {result.broadcastAddress || "-"}
+            </p>
+          </div>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">Primeiro Host:</p>
+            <p className="text-white familjen-grotesk-400">
+              {result.firstHost || "-"}
+            </p>
+          </div>
+          <div className="flex flex-row items-center justify-between">
+            <p className="text-white familjen-grotesk-400">Último Host:</p>
+            <p className="text-white familjen-grotesk-400">
+              {result.lastHost || "-"}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   )
-
-
-
-
-
-
-
 }
