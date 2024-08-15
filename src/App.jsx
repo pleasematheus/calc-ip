@@ -81,13 +81,13 @@ export default function App() {
       <div className="w-full sm:w-1/2 max-w-xs border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
           <label className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
-            Endereço IP
+            Calculadora de IP
           </label>
           <input
             type="text"
             value={ip}
             onChange={(e) => setIp(e.target.value)}
-            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-blue-500 focus:outline-none focus:shadow-outline hover:border-blue-500 transition-all duration-300"
+            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-sky-500 focus:outline-none focus:shadow-outline hover:border-blue-600 transition-all duration-300 bg-[#242424] text-[#ffffffde] caret-sky-500"
             placeholder="Endereço IP (exemplo 192.168.0.1)"
             aria-label="endereco"
           />
