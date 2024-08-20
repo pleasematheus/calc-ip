@@ -2,26 +2,34 @@ import { useEffect, useState } from "react"
 import "./output.css"
 
 export default function App() {
+  // Estado para armazenar o endereço IP fornecido pelo usuário
   const [ip, setIp] = useState("")
+  // Estado para armazenar a quantidade de subredes
   const [subnets, setSubnets] = useState(1)
+  // Estado para armazenar o valor CIDR (máscara de sub-rede) selecionado
   const [cidr, setCidr] = useState(24)
+  // Estado para armazenar o resultado do cálculo de rede
   const [result, setResult] = useState({})
 
+  // Efeito que calcula as informações de rede quando o IP, CIDR ou número de subredes muda
   useEffect(() => {
     if (ip) {
       calculateNetwork(ip, cidr, subnets)
     }
   }, [ip, cidr, subnets])
 
+  // Função para calcular as informações de rede com base no IP, CIDR e número de subredes
   const calculateNetwork = (ip, cidr, subnets) => {
     const subnetMask = cidrToSubnet(cidr)
     const ipParts = ip.split(".").map(Number)
     const subnetParts = subnetMask.split(".").map(Number)
 
+    // Calcula o endereço de rede
     const networkAddress = ipParts
       .map((part, index) => part & subnetParts[index])
       .join(".")
 
+    // Calcula o endereço de broadcast
     const broadcastAddress = ipParts
       .map(
         (part, index) =>
@@ -29,14 +37,20 @@ export default function App() {
       )
       .join(".")
 
+    // Calcula o primeiro e o último host
     const firstHost = incrementIp(networkAddress)
     const lastHost = decrementIp(broadcastAddress)
 
+    // Determina a classe do IP
     const ipClass = determineIpClass(ipParts[0])
+    // Calcula a quantidade de hosts
     const numHosts = Math.pow(2, 32 - cidr) - 2
+    // Converte o IP para binário
     const ipBinary = convertToBinary(ipParts)
+    // Calcula as informações das subredes
     const subnetsInfo = calculateSubnets(networkAddress, cidr, subnets)
 
+    // Atualiza o estado com os resultados calculados
     setResult({
       networkAddress,
       broadcastAddress,
@@ -50,6 +64,7 @@ export default function App() {
     })
   }
 
+  // Função para calcular as subredes com base no endereço de rede, CIDR e número de subredes
   const calculateSubnets = (networkAddress, cidr, subnets) => {
     const subnetsInfo = []
     const increment = Math.pow(2, 32 - (cidr + Math.ceil(Math.log2(subnets))))
@@ -76,6 +91,7 @@ export default function App() {
     return subnetsInfo
   }
 
+  // Função para converter CIDR em máscara de sub-rede
   const cidrToSubnet = (cidr) => {
     const mask = []
     for (let i = 0; i < 4; i++) {
@@ -86,6 +102,7 @@ export default function App() {
     return mask.join(".")
   }
 
+  // Função para determinar a classe do IP com base no primeiro octeto
   const determineIpClass = (firstOctet) => {
     if (firstOctet >= 1 && firstOctet <= 126) {
       return "Classe A"
@@ -101,10 +118,12 @@ export default function App() {
     return "Desconhecida"
   }
 
+  // Função para converter o IP em binário
   const convertToBinary = (ipParts) => {
     return ipParts.map((part) => part.toString(2).padStart(8, "0")).join(".")
   }
 
+  // Função para converter o IP em decimal
   const ipToDecimal = (ip) => {
     return ip
       .split(".")
@@ -114,6 +133,7 @@ export default function App() {
       )
   }
 
+  // Função para converter decimal em IP
   const decimalToIp = (decimal) => {
     return Array.from(
       { length: 4 },
@@ -121,11 +141,13 @@ export default function App() {
     ).join(".")
   }
 
+  // Função para incrementar o IP (para o próximo endereço)
   const incrementIp = (ip) => {
     const decimal = ipToDecimal(ip)
     return decimalToIp(decimal + 1)
   }
 
+  // Função para decrementar o IP (para o endereço anterior)
   const decrementIp = (ip) => {
     const decimal = ipToDecimal(ip)
     return decimalToIp(decimal - 1)
@@ -246,12 +268,8 @@ export default function App() {
             {result.subnetsInfo?.map((subnet, index) => (
               <div key={index} className="mb-2 p-2 bg-[#333] rounded">
                 <div className="flex flex-row items-center justify-between">
-                  <p className="text-white familjen-grotesk-400">
-                    Subrede:
-                  </p>
-                  <p className="text-white familjen-grotesk-400">
-                    {index + 1}
-                  </p>
+                  <p className="text-white familjen-grotesk-400">Subrede:</p>
+                  <p className="text-white familjen-grotesk-400">{index + 1}</p>
                 </div>
                 <div className="flex flex-row items-center justify-between">
                   <p className="text-white familjen-grotesk-400">
