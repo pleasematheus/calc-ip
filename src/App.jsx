@@ -4,18 +4,19 @@ import "./output.css"
 export default function App() {
   const [ip, setIp] = useState("")
   const [subnets, setSubnets] = useState(1)
+  const [cidr, setCidr] = useState(24)
   const [result, setResult] = useState({})
 
   useEffect(() => {
     if (ip) {
-      calculateNetwork(ip, subnets)
+      calculateNetwork(ip, cidr, subnets)
     }
-  }, [ip, subnets])
+  }, [ip, cidr, subnets])
 
-  const calculateNetwork = (ip, subnets) => {
-    const subnet = determineSubnet(subnets)
+  const calculateNetwork = (ip, cidr, subnets) => {
+    const subnetMask = cidrToSubnet(cidr)
     const ipParts = ip.split(".").map(Number)
-    const subnetParts = subnet.split(".").map(Number)
+    const subnetParts = subnetMask.split(".").map(Number)
 
     const networkAddress = ipParts
       .map((part, index) => part & subnetParts[index])
@@ -28,20 +29,13 @@ export default function App() {
       )
       .join(".")
 
-    const firstHost = networkAddress
-      .split(".")
-      .map((part, index) => (index === 3 ? Number(part) + 1 : part))
-      .join(".")
-
-    const lastHost = broadcastAddress
-      .split(".")
-      .map((part, index) => (index === 3 ? Number(part) - 1 : part))
-      .join(".")
+    const firstHost = incrementIp(networkAddress)
+    const lastHost = decrementIp(broadcastAddress)
 
     const ipClass = determineIpClass(ipParts[0])
-
-    const numHosts = Math.pow(2, 32 - subnetToCidr(subnet)) - 2
+    const numHosts = Math.pow(2, 32 - cidr) - 2
     const ipBinary = convertToBinary(ipParts)
+    const subnetsInfo = calculateSubnets(networkAddress, cidr, subnets)
 
     setResult({
       networkAddress,
@@ -49,17 +43,37 @@ export default function App() {
       firstHost,
       lastHost,
       ipClass,
-      subnetMask: subnet,
+      subnetMask,
       numHosts,
       ipBinary,
+      subnetsInfo,
     })
   }
 
-  const determineSubnet = (subnets) => {
-    const defaultSubnet = "255.255.255.0" // Classe C padrão
-    const cidr = 24 + Math.ceil(Math.log2(subnets)) // Incrementa o CIDR com base no número de subredes
+  const calculateSubnets = (networkAddress, cidr, subnets) => {
+    const subnetsInfo = []
+    const increment = Math.pow(2, 32 - (cidr + Math.ceil(Math.log2(subnets))))
+    let currentNetworkAddress = ipToDecimal(networkAddress)
 
-    return cidrToSubnet(cidr) || defaultSubnet
+    for (let i = 0; i < subnets; i++) {
+      const subnetNetworkAddress = decimalToIp(currentNetworkAddress)
+      const subnetBroadcastAddress = decimalToIp(
+        currentNetworkAddress + increment - 1
+      )
+      const subnetFirstHost = incrementIp(subnetNetworkAddress)
+      const subnetLastHost = decrementIp(subnetBroadcastAddress)
+
+      subnetsInfo.push({
+        subnetNetworkAddress,
+        subnetBroadcastAddress,
+        subnetFirstHost,
+        subnetLastHost,
+      })
+
+      currentNetworkAddress += increment
+    }
+
+    return subnetsInfo
   }
 
   const cidrToSubnet = (cidr) => {
@@ -91,19 +105,35 @@ export default function App() {
     return ipParts.map((part) => part.toString(2).padStart(8, "0")).join(".")
   }
 
-  const subnetToCidr = (subnet) => {
-    return subnet
+  const ipToDecimal = (ip) => {
+    return ip
       .split(".")
-      .map(Number)
       .reduce(
-        (cidr, octet) => cidr + octet.toString(2).replace(/0/g, "").length,
+        (decimal, octet, index) => decimal + octet * Math.pow(256, 3 - index),
         0
       )
   }
 
+  const decimalToIp = (decimal) => {
+    return Array.from(
+      { length: 4 },
+      (_, i) => Math.floor(decimal / Math.pow(256, 3 - i)) % 256
+    ).join(".")
+  }
+
+  const incrementIp = (ip) => {
+    const decimal = ipToDecimal(ip)
+    return decimalToIp(decimal + 1)
+  }
+
+  const decrementIp = (ip) => {
+    const decimal = ipToDecimal(ip)
+    return decimalToIp(decimal - 1)
+  }
+
   return (
     <div className="grid place-items-center min-h-screen p-4">
-      <div className="w-full sm:w-1/2 max-w-xs border-solid border-2 border-sky-500 p-3 rounded-xl">
+      <div className="w-full sm:w-1/2 max-w-sm border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
           <label className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
             Calculadora de IP
@@ -118,13 +148,27 @@ export default function App() {
           />
         </div>
         <div className="mb-4">
+          <label className="text-white familjen-grotesk-400">CIDR:</label>
+          <select
+            value={cidr}
+            onChange={(e) => setCidr(Number(e.target.value))}
+            className="w-full py-2 px-3 bg-[#242424] text-white border rounded focus:ring-4 focus:ring-sky-500 focus:outline-none transition-all duration-300 hover:border-blue-600"
+          >
+            {Array.from({ length: 30 - 1 + 1 }, (_, i) => i + 1).map((cidr) => (
+              <option key={cidr} value={cidr}>
+                /{cidr}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
           <label className="text-white familjen-grotesk-400">
             Quantidade de subredes:
           </label>
           <select
             value={subnets}
             onChange={(e) => setSubnets(Number(e.target.value))}
-            className="w-full py-2 px-3 bg-[#242424] text-white border rounded focus:ring-4 focus:ring-sky-500 focus:outline-none"
+            className="w-full py-2 px-3 bg-[#242424] text-white border rounded focus:ring-4 focus:ring-sky-500 focus:outline-none transition-all duration-300 hover:border-blue-600"
           >
             <option value={1}>1</option>
             <option value={2}>2</option>
@@ -180,18 +224,69 @@ export default function App() {
             </p>
           </div>
           <div className="flex flex-row items-center justify-between">
-            <p className="text-white familjen-grotesk-400">Número de Hosts:</p>
+            <p className="text-white familjen-grotesk-400">
+              Quantidade de Hosts:
+            </p>
             <p className="text-white familjen-grotesk-400">
               {result.numHosts || "-"}
             </p>
           </div>
-          <div className="mt-4">
-            <h3 className="text-center text-white familjen-grotesk-700 mb-2">
-              IP em Binário
-            </h3>
+          <hr className="mt-2 mb-2" />
+          <div className="grid place-items-center">
+            <p className="text-white familjen-grotesk-700">IP em Binário:</p>
             <p className="text-white familjen-grotesk-400">
               {result.ipBinary || "-"}
             </p>
+          </div>
+        </div>
+        <hr className="mt-2 mb-2" />
+        <div>
+          <h3 className="text-white familjen-grotesk-400 mb-2">Subredes:</h3>
+          <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-sky-500">
+            {result.subnetsInfo?.map((subnet, index) => (
+              <div key={index} className="mb-2 p-2 bg-[#333] rounded">
+                <div className="flex flex-row items-center justify-between">
+                  <p className="text-white familjen-grotesk-400">
+                    Subrede:
+                  </p>
+                  <p className="text-white familjen-grotesk-400">
+                    {index + 1}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <p className="text-white familjen-grotesk-400">
+                    Endereço de Rede:
+                  </p>
+                  <p className="text-white familjen-grotesk-400">
+                    {subnet.subnetNetworkAddress}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <p className="text-white familjen-grotesk-400">
+                    Primeiro Host:
+                  </p>
+                  <p className="text-white familjen-grotesk-400">
+                    {subnet.subnetFirstHost}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <p className="text-white familjen-grotesk-400">
+                    Último Host:
+                  </p>
+                  <p className="text-white familjen-grotesk-400">
+                    {subnet.subnetLastHost}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <p className="text-white familjen-grotesk-400">
+                    Endereço de Broadcast:
+                  </p>
+                  <p className="text-white familjen-grotesk-400">
+                    {subnet.subnetBroadcastAddress}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
