@@ -1,8 +1,3 @@
-
-Aqui está um exemplo de README simples em inglês para um projeto de uma calculadora de IP feita com React, Vite e Tailwind CSS:
-
----
-
 # IP Calculator
 
 A simple IP calculator built with React, Vite, and Tailwind CSS.
@@ -27,7 +22,7 @@ Follow these instructions to set up the project locally.
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/ip-calculator.git
+    git clone https://github.com/pleasematheus/calc-ip.git
     ```
 
 2. Navigate to the project directory:
@@ -62,7 +57,7 @@ or
 yarn dev
 ```
 
-Open your browser and navigate to `http://localhost:3000` to view the application.
+Open your browser and navigate to `http://localhost:5173` to view the application.
 
 ### Building for Production
 
@@ -92,9 +87,7 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk5MzgzMzAwOF19
+eyJoaXN0b3J5IjpbLTQ2Mjk3Njc2N119
 -->
