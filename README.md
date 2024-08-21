@@ -1,13 +1,6 @@
-# React + Vite
+# IP Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast RefreshCalculadora de IP
-
-This project is simple Web application
+This is a simple Web project
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTM0Mjg5ODU4NF19
+eyJoaXN0b3J5IjpbMTM3NDQ5MDIyOF19
 -->
