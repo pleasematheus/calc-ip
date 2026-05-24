@@ -1,157 +1,108 @@
-import { useEffect, useState } from "react"
-import "./output.css"
+import { useMemo, useState } from "react"
+import "./input.css"
+
+const generateRandomIp = () => {
+  const oct = (min = 0, max = 255) => Math.floor(Math.random() * (max - min + 1)) + min
+  return `${oct(1, 223)}.${oct()}.${oct()}.${oct(1, 254)}`
+}
+
+const cidrToSubnet = (cidr) => {
+  const mask = []
+  for (let i = 0; i < 4; i++) {
+    const bits = Math.min(8, cidr)
+    mask.push((256 - Math.pow(2, 8 - bits)) % 256)
+    cidr -= bits
+  }
+  return mask.join(".")
+}
+
+const determineIpClass = (firstOctet) => {
+  if (firstOctet >= 1 && firstOctet <= 126) return "Classe A"
+  if (firstOctet >= 128 && firstOctet <= 191) return "Classe B"
+  if (firstOctet >= 192 && firstOctet <= 223) return "Classe C"
+  if (firstOctet >= 224 && firstOctet <= 239) return "Classe D"
+  if (firstOctet >= 240 && firstOctet <= 255) return "Classe E"
+  return "Desconhecida"
+}
+
+const convertToBinary = (ipParts) =>
+  ipParts.map((part) => part.toString(2).padStart(8, "0")).join(".")
+
+const ipToDecimal = (ip) =>
+  ip
+    .split(".")
+    .reduce(
+      (decimal, octet, index) => decimal + Number(octet) * Math.pow(256, 3 - index),
+      0
+    )
+
+const decimalToIp = (decimal) =>
+  Array.from(
+    { length: 4 },
+    (_, i) => Math.floor(decimal / Math.pow(256, 3 - i)) % 256
+  ).join(".")
+
+const incrementIp = (ip) => decimalToIp(ipToDecimal(ip) + 1)
+const decrementIp = (ip) => decimalToIp(ipToDecimal(ip) - 1)
+
+const calculateSubnets = (networkAddress, cidr, subnets) => {
+  const bitsNeeded = subnets === 1 ? 0 : Math.ceil(Math.log2(subnets))
+  if (cidr + bitsNeeded > 32) return []
+
+  const subnetsInfo = []
+  const increment = Math.pow(2, 32 - (cidr + bitsNeeded))
+  let currentNetworkAddress = ipToDecimal(networkAddress)
+
+  for (let i = 0; i < subnets; i++) {
+    const subnetNetworkAddress = decimalToIp(currentNetworkAddress)
+    const subnetBroadcastAddress = decimalToIp(currentNetworkAddress + increment - 1)
+    subnetsInfo.push({
+      subnetNetworkAddress,
+      subnetBroadcastAddress,
+      subnetFirstHost: incrementIp(subnetNetworkAddress),
+      subnetLastHost: decrementIp(subnetBroadcastAddress),
+    })
+    currentNetworkAddress += increment
+  }
+
+  return subnetsInfo
+}
+
+const calculateNetwork = (ip, cidr, subnets) => {
+  const subnetMask = cidrToSubnet(cidr)
+  const ipParts = ip.split(".").map(Number)
+  const subnetParts = subnetMask.split(".").map(Number)
+
+  const networkAddress = ipParts
+    .map((part, index) => part & subnetParts[index])
+    .join(".")
+
+  const broadcastAddress = ipParts
+    .map((part, index) => (part & subnetParts[index]) | (~subnetParts[index] & 255))
+    .join(".")
+
+  return {
+    networkAddress,
+    broadcastAddress,
+    firstHost: cidr >= 32 ? networkAddress : incrementIp(networkAddress),
+    lastHost: cidr >= 31 ? broadcastAddress : decrementIp(broadcastAddress),
+    ipClass: determineIpClass(ipParts[0]),
+    subnetMask,
+    numHosts: Math.max(0, Math.pow(2, 32 - cidr) - 2),
+    ipBinary: convertToBinary(ipParts),
+    subnetsInfo: calculateSubnets(networkAddress, cidr, subnets),
+  }
+}
 
 export default function App() {
-  // Estado para armazenar o endereço IP fornecido pelo usuário
   const [ip, setIp] = useState("")
-  // Estado para armazenar a quantidade de subredes
   const [subnets, setSubnets] = useState(1)
-  // Estado para armazenar o valor CIDR (máscara de sub-rede) selecionado
   const [cidr, setCidr] = useState(24)
-  // Estado para armazenar o resultado do cálculo de rede
-  const [result, setResult] = useState({})
 
-  // Efeito que calcula as informações de rede quando o IP, CIDR ou número de subredes muda
-  useEffect(() => {
-    if (ip) {
-      calculateNetwork(ip, cidr, subnets)
-    }
-  }, [ip, cidr, subnets])
-
-  // Função para calcular as informações de rede com base no IP, CIDR e número de subredes
-  const calculateNetwork = (ip, cidr, subnets) => {
-    const subnetMask = cidrToSubnet(cidr)
-    const ipParts = ip.split(".").map(Number)
-    const subnetParts = subnetMask.split(".").map(Number)
-
-    // Calcula o endereço de rede
-    const networkAddress = ipParts
-      .map((part, index) => part & subnetParts[index])
-      .join(".")
-
-    // Calcula o endereço de broadcast
-    const broadcastAddress = ipParts
-      .map(
-        (part, index) =>
-          (part & subnetParts[index]) | (~subnetParts[index] & 255)
-      )
-      .join(".")
-
-    // Calcula o primeiro e o último host
-    const firstHost = incrementIp(networkAddress)
-    const lastHost = decrementIp(broadcastAddress)
-
-    // Determina a classe do IP
-    const ipClass = determineIpClass(ipParts[0])
-    // Calcula a quantidade de hosts
-    const numHosts = Math.pow(2, 32 - cidr) - 2
-    // Converte o IP para binário
-    const ipBinary = convertToBinary(ipParts)
-    // Calcula as informações das subredes
-    const subnetsInfo = calculateSubnets(networkAddress, cidr, subnets)
-
-    // Atualiza o estado com os resultados calculados
-    setResult({
-      networkAddress,
-      broadcastAddress,
-      firstHost,
-      lastHost,
-      ipClass,
-      subnetMask,
-      numHosts,
-      ipBinary,
-      subnetsInfo,
-    })
-  }
-
-  // Função para calcular as subredes com base no endereço de rede, CIDR e número de subredes
-  const calculateSubnets = (networkAddress, cidr, subnets) => {
-    const subnetsInfo = []
-    const increment = Math.pow(2, 32 - (cidr + Math.ceil(Math.log2(subnets))))
-    let currentNetworkAddress = ipToDecimal(networkAddress)
-
-    for (let i = 0; i < subnets; i++) {
-      const subnetNetworkAddress = decimalToIp(currentNetworkAddress)
-      const subnetBroadcastAddress = decimalToIp(
-        currentNetworkAddress + increment - 1
-      )
-      const subnetFirstHost = incrementIp(subnetNetworkAddress)
-      const subnetLastHost = decrementIp(subnetBroadcastAddress)
-
-      subnetsInfo.push({
-        subnetNetworkAddress,
-        subnetBroadcastAddress,
-        subnetFirstHost,
-        subnetLastHost,
-      })
-
-      currentNetworkAddress += increment
-    }
-
-    return subnetsInfo
-  }
-
-  // Função para converter CIDR em máscara de sub-rede
-  const cidrToSubnet = (cidr) => {
-    const mask = []
-    for (let i = 0; i < 4; i++) {
-      const bits = Math.min(8, cidr)
-      mask.push((256 - Math.pow(2, 8 - bits)) % 256)
-      cidr -= bits
-    }
-    return mask.join(".")
-  }
-
-  // Função para determinar a classe do IP com base no primeiro octeto
-  const determineIpClass = (firstOctet) => {
-    if (firstOctet >= 1 && firstOctet <= 126) {
-      return "Classe A"
-    } else if (firstOctet >= 128 && firstOctet <= 191) {
-      return "Classe B"
-    } else if (firstOctet >= 192 && firstOctet <= 223) {
-      return "Classe C"
-    } else if (firstOctet >= 224 && firstOctet <= 239) {
-      return "Classe D"
-    } else if (firstOctet >= 240 && firstOctet <= 255) {
-      return "Classe E"
-    }
-    return "Desconhecida"
-  }
-
-  // Função para converter o IP em binário
-  const convertToBinary = (ipParts) => {
-    return ipParts.map((part) => part.toString(2).padStart(8, "0")).join(".")
-  }
-
-  // Função para converter o IP em decimal
-  const ipToDecimal = (ip) => {
-    return ip
-      .split(".")
-      .reduce(
-        (decimal, octet, index) => decimal + octet * Math.pow(256, 3 - index),
-        0
-      )
-  }
-
-  // Função para converter decimal em IP
-  const decimalToIp = (decimal) => {
-    return Array.from(
-      { length: 4 },
-      (_, i) => Math.floor(decimal / Math.pow(256, 3 - i)) % 256
-    ).join(".")
-  }
-
-  // Função para incrementar o IP (para o próximo endereço)
-  const incrementIp = (ip) => {
-    const decimal = ipToDecimal(ip)
-    return decimalToIp(decimal + 1)
-  }
-
-  // Função para decrementar o IP (para o endereço anterior)
-  const decrementIp = (ip) => {
-    const decimal = ipToDecimal(ip)
-    return decimalToIp(decimal - 1)
-  }
+  const result = useMemo(
+    () => (ip ? calculateNetwork(ip, cidr, subnets) : {}),
+    [ip, cidr, subnets]
+  )
 
   return (
     <div className="grid place-items-center min-h-screen p-4">
@@ -160,28 +111,43 @@ export default function App() {
           <label className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
             Calculadora de IP
           </label>
-          <input
-            type="text"
-            value={ip}
-            onChange={(e) => setIp(e.target.value)}
-            className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:ring-4 focus:ring-sky-500 focus:outline-none focus:shadow-outline hover:border-blue-600 transition-all duration-300 bg-[#242424] text-[#ffffffde] caret-sky-500"
-            placeholder="Endereço IP (exemplo 192.168.0.103)"
-            aria-label="endereco"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={ip}
+              onChange={(e) => setIp(e.target.value)}
+              className="text-center familjen-grotesk-400 shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:ring-4 focus:ring-sky-500 focus:outline-none focus:shadow-outline hover:border-blue-600 transition-all duration-300 bg-[#242424] text-[#ffffffde] caret-sky-500"
+              placeholder="Endereço IP (exemplo 192.168.0.103)"
+              aria-label="endereco"
+            />
+            <button
+              onClick={() => setIp(generateRandomIp())}
+              className="shrink-0 px-3 py-2 border rounded bg-[#242424] text-sky-400 hover:border-sky-500 hover:text-sky-300 transition-all duration-300 familjen-grotesk-400"
+              title="Gerar IP aleatório"
+            >
+              ?
+            </button>
+          </div>
         </div>
         <div className="mb-4">
-          <label className="text-white familjen-grotesk-400">CIDR:</label>
-          <select
-            value={cidr}
-            onChange={(e) => setCidr(Number(e.target.value))}
-            className="w-full py-2 px-3 bg-[#242424] text-white border rounded focus:ring-4 focus:ring-sky-500 focus:outline-none transition-all duration-300 hover:border-blue-600"
-          >
-            {Array.from({ length: 30 - 1 + 1 }, (_, i) => i + 1).map((cidr) => (
-              <option key={cidr} value={cidr}>
-                /{cidr}
-              </option>
-            ))}
-          </select>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-white familjen-grotesk-400">CIDR:</label>
+            <span className="text-sky-400 familjen-grotesk-700">/{cidr}</span>
+          </div>
+          <div className="px-2">
+            <input
+              type="range"
+              min={1}
+              max={32}
+              value={cidr}
+              onChange={(e) => setCidr(Number(e.target.value))}
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-[#3a3a3a] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-500 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-sky-500 [&::-moz-range-thumb]:border-0"
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-1 familjen-grotesk-400">
+            <span>/1</span>
+            <span>/32</span>
+          </div>
         </div>
         <div className="mb-4">
           <label className="text-white familjen-grotesk-400">
