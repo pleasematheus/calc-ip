@@ -108,9 +108,9 @@ export default function App() {
     <div className="grid place-items-center min-h-screen p-4">
       <div className="w-full sm:w-1/2 max-w-sm border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
-          <label className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
+          <h1 className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
             Calculadora de IP
-          </label>
+          </h1>
           <div className="flex gap-2">
             <input
               type="text"
@@ -121,6 +121,7 @@ export default function App() {
               aria-label="endereco"
             />
             <button
+              type="button"
               onClick={() => setIp(generateRandomIp())}
               className="shrink-0 px-3 py-2 border rounded bg-[#242424] text-sky-400 hover:border-sky-500 hover:text-sky-300 transition-all duration-300 familjen-grotesk-400"
               title="Gerar IP aleatório"
@@ -131,11 +132,12 @@ export default function App() {
         </div>
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-white familjen-grotesk-400">CIDR:</label>
+            <label htmlFor="cidr" className="text-white familjen-grotesk-400">CIDR:</label>
             <span className="text-sky-400 familjen-grotesk-700">/{cidr}</span>
           </div>
           <div className="px-2">
             <input
+              id="cidr"
               type="range"
               min={1}
               max={32}
@@ -150,10 +152,11 @@ export default function App() {
           </div>
         </div>
         <div className="mb-4">
-          <label className="text-white familjen-grotesk-400">
+          <label htmlFor="subnets" className="text-white familjen-grotesk-400">
             Quantidade de subredes:
           </label>
           <select
+            id="subnets"
             value={subnets}
             onChange={(e) => setSubnets(Number(e.target.value))}
             className="w-full py-2 px-3 bg-[#242424] text-white border rounded focus:ring-4 focus:ring-sky-500 focus:outline-none transition-all duration-300 hover:border-blue-600"
@@ -232,7 +235,7 @@ export default function App() {
           <h3 className="text-white familjen-grotesk-400 mb-2">Subredes:</h3>
           <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-sky-500">
             {result.subnetsInfo?.map((subnet, index) => (
-              <div key={index} className="mb-2 p-2 bg-[#333] rounded">
+              <div key={subnet.subnetNetworkAddress} className="mb-2 p-2 bg-[#333] rounded">
                 <div className="flex flex-row items-center justify-between">
                   <p className="text-white familjen-grotesk-400">Subrede:</p>
                   <p className="text-white familjen-grotesk-400">{index + 1}</p>
