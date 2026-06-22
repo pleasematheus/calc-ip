@@ -105,7 +105,7 @@ export default function App() {
   )
 
   return (
-    <div className="grid place-items-center min-h-screen p-4">
+    <div className="grid place-items-center h-svh p-4 my-3">
       <div className="w-full sm:w-1/2 max-w-sm border-solid border-2 border-sky-500 p-3 rounded-xl">
         <div className="mb-4">
           <h1 className="text-center text-3xl block text-white familjen-grotesk-700 font-bold mb-2">
